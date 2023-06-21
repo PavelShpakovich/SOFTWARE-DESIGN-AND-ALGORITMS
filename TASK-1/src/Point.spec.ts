@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Point } from "./point";
 
 describe("Point", () => {
