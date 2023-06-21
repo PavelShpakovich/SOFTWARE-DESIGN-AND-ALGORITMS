@@ -9,14 +9,14 @@ export abstract class Shape {
 
   constructor(points: Point[]);
   constructor(points: Point[], color: string, filled: boolean);
-  constructor(points: Point[], color?: string, filled?: boolean) {
+  constructor(points: Point[], color: string = "green", filled: boolean = true) {
     if (points.length < 3) {
       throw new Error("Provide at least 3 points");
     }
 
     this.points = points;
-    this.color = color ?? "green";
-    this.filled = filled ?? true;
+    this.color = color;
+    this.filled = filled;
   }
 
   toString(): string {
