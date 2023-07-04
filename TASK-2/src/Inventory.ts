@@ -11,10 +11,10 @@ export class Inventory {
   sort(): void;
   sort(comparator: ItemComparator): void;
   sort(comparator?: ItemComparator) {
-    this.items.sort(comparator?.compare || ((a, b) => a.value - b.value));
+    this.items.sort(comparator?.compare.bind(comparator) || ((a, b) => a.value - b.value));
   }
 
   toString(): string {
-    return this.items.map((item) => item.toString()).join(", ");
+    return this.items.join(", ");
   }
 }

@@ -6,6 +6,7 @@ export abstract class Weapon extends Item {
   protected damageModifier: number = 0;
   protected durabilityModifier: number = 0;
   private baseDurability: number;
+  private isBroken: boolean = false;
 
   constructor(name: string, baseDamage: number, baseDurability: number, value: number, weight: number) {
     super(name, value, weight);
@@ -16,21 +17,21 @@ export abstract class Weapon extends Item {
   abstract polish(): void;
 
   use(): string {
-    if (this.baseDurability <= 0) return `You can't use the ${this.name}, it is broken.`;
+    if (this.isBroken) return `You can't use the ${this.name}, it is broken.`;
 
-    this.baseDurability -= Weapon.MODIFIER_CHANGE_RATE;
-    if (this.baseDurability <= 0) {
-      this.baseDurability = 0;
+    this.durabilityModifier -= Weapon.MODIFIER_CHANGE_RATE;
+    if (this.getEffectiveDurability() <= 0) {
+      this.isBroken = true;
     }
     return `You use the ${this.name}, dealing ${Weapon.MODIFIER_CHANGE_RATE} points of damage.${
-      !this.baseDurability ? `\nThe ${this.name} breaks.` : ""
+      this.getEffectiveDurability() <= 0 ? `\nThe ${this.name} breaks.` : ""
     }`;
   }
 
   toString(): string {
-    return `${this.name} − Value: ${this.value.toFixed(2)}, Weight: ${this.weight.toFixed(2)}, Damage: ${(
-      this.baseDamage + this.damageModifier
-    ).toFixed(2)}, Durability: ${((this.baseDurability + this.durabilityModifier) * 100).toFixed(2)}%`;
+    return `${super.toString()}, Damage: ${this.getEffectiveDamage().toFixed(2)}, Durability: ${(
+      this.getEffectiveDurability() * 100
+    ).toFixed(2)}%`;
   }
 
   getEffectiveDamage(): number {
