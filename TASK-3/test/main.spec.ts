@@ -13,7 +13,7 @@ describe('Main file', () => {
   const executor: ExecutorUser = {
     name: 'Executor',
     position: { x: 1, y: 1 },
-    possibilities: [Demand.Fighting, Demand.Fishing]
+    possibilities: [Demand.Fighting, Demand.Fishing],
   };
   const clients: Array<ClientUser> = [
     { name: 'Philip', demands: some([Demand.Fishing, Demand.Fighting]), position: { x: 10, y: 30 }, reward: 600 },
@@ -30,37 +30,44 @@ describe('Main file', () => {
 
   describe('show', () => {
     it('show returns right with the message and sort by reward', () => {
-      expect(show(SortBy.reward)(clients)(executor)).toStrictEqual(right(`This executor meets the demands of only 3 out of 4 clients
+      expect(show(SortBy.reward)(clients)(executor)).toStrictEqual(
+        right(`This executor meets the demands of only 3 out of 4 clients
 
 Available clients sorted by highest reward:
 name: Philip, distance: 30.364, reward: 600
 name: John, distance: 21.378, reward: 250
-name: Gregor, distance: 20.025, reward: 230`));
+name: Gregor, distance: 20.025, reward: 230`)
+      );
     });
 
     it('show returns right with the message and sort by distance', () => {
-      expect(show(SortBy.distance)(clients)(executor)).toStrictEqual(right(`This executor meets the demands of only 3 out of 4 clients
+      expect(show(SortBy.distance)(clients)(executor)).toStrictEqual(
+        right(`This executor meets the demands of only 3 out of 4 clients
 
 Available clients sorted by distance to executor:
 name: Gregor, distance: 20.025, reward: 230
 name: John, distance: 21.378, reward: 250
-name: Philip, distance: 30.364, reward: 600`));
+name: Philip, distance: 30.364, reward: 600`)
+      );
     });
 
     it('show returns left with the message when cannot find clients', () => {
       const clientsWithoutNone = clients.slice(0, 2);
       const executorWithoutPossibilities = { ...executor, possibilities: [] };
-      expect(show(SortBy.reward)(clientsWithoutNone)(executorWithoutPossibilities)).toStrictEqual(left(`This executor cannot meet the demands of any client!`));
+      expect(show(SortBy.reward)(clientsWithoutNone)(executorWithoutPossibilities)).toStrictEqual(
+        left(`This executor cannot meet the demands of any client!`)
+      );
     });
 
     it('show returns left with the message when cannot find clients', () => {
       const executorWithAllPossibilities = {
         ...executor,
-        possibilities: [Demand.Fishing, Demand.Fighting, Demand.Driving]
+        possibilities: [Demand.Fishing, Demand.Fighting, Demand.Driving],
       };
       expect(
-        getOrElse(() => '')(show(SortBy.reward)(clients)(executorWithAllPossibilities))
-          .startsWith('This executor meets all demands of all clients!')
+        getOrElse(() => '')(show(SortBy.reward)(clients)(executorWithAllPossibilities)).startsWith(
+          'This executor meets all demands of all clients!'
+        )
       ).toBe(true);
     });
   });
@@ -75,33 +82,27 @@ name: Philip, distance: 30.364, reward: 600`));
       mockedFetching.fetchExecutor.mockResolvedValue(executor);
       mockedFetching.fetchClient.mockResolvedValue(clientsResponse);
 
-      return main(SortBy.distance).then(
-        message => {
-          expect(message).toBe(getOrElse(() => '')(show(SortBy.distance)(clients)(executor)));
-        }
-      );
+      return main(SortBy.distance).then((message) => {
+        expect(message).toBe(getOrElse(() => '')(show(SortBy.distance)(clients)(executor)));
+      });
     });
 
     it('main returns error message when fetchExecutor fails', () => {
       mockedFetching.fetchExecutor.mockRejectedValue('Unable to fetch executor');
       mockedFetching.fetchClient.mockResolvedValue(clientsResponse);
 
-      return main(SortBy.distance).then(
-        message => {
-          expect(message).toBe('Unable to fetch executor');
-        }
-      );
+      return main(SortBy.distance).then((message) => {
+        expect(message).toBe('Unable to fetch executor');
+      });
     });
 
     it('main returns error message when fetchClient fails', () => {
       mockedFetching.fetchExecutor.mockResolvedValue(executor);
       mockedFetching.fetchClient.mockRejectedValue('Unable to fetch clients');
 
-      return main(SortBy.distance).then(
-        message => {
-          expect(message).toBe('Unable to fetch clients');
-        }
-      );
+      return main(SortBy.distance).then((message) => {
+        expect(message).toBe('Unable to fetch clients');
+      });
     });
   });
 });
