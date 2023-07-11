@@ -1,8 +1,8 @@
 import { Either, fromPromise, ap, right, getOrElse, flatten, left } from './fp/either';
 import { pipe } from './fp/utils';
-import { fold, fromNullable } from './fp/maybe';
+import { fold, fromNullable, some, none, Maybe } from './fp/maybe';
 import { fetchClient, fetchExecutor } from './fetching';
-import { ClientUser, Demand, ExecutorUser } from './types';
+import { ClientUser, Demand, ExecutorUser, User } from './types';
 import { fromCompare, ordNumber } from './fp/ord';
 import { sort, map } from './fp/array';
 import { distance } from './utils';
@@ -12,7 +12,12 @@ type Response<R> = Promise<Either<string, R>>;
 const getExecutor = (): Response<ExecutorUser> => fromPromise(fetchExecutor());
 const getClients = (): Response<Array<ClientUser>> =>
   fromPromise(
-    fetchClient().then((clients) => clients.map((client) => ({ ...client, demands: fromNullable(client.demands) })))
+    fetchClient().then((clients) =>
+      map<User & { reward: number; demands: Demand[] }, ClientUser>((client) => ({
+        ...client,
+        demands: fromNullable(client.demands),
+      }))(clients)
+    )
   );
 
 export enum SortBy {
@@ -33,28 +38,41 @@ export const show =
       sortBy === SortBy.reward
         ? ordNumber.compare(y[sortBy], x[sortBy])
         : ordNumber.compare(distance(executor.position, x.position), distance(executor.position, y.position));
-    const sortedClients = sort(fromCompare(predicate))(clients);
 
-    const filteredClients = sortedClients.filter((client) => {
-      return fold<Demand[], boolean>(
-        () => true,
-        (demands) => demands.every((demand) => executor.possibilities.includes(demand))
-      )(client.demands);
-    });
+    const filterClients = (sortedClients: ClientUser[]): ClientUser[] =>
+      sortedClients.filter((client) => {
+        return fold<Demand[], boolean>(
+          () => true,
+          (demands) => demands.every((demand) => executor.possibilities.includes(demand))
+        )(client.demands);
+      });
 
-    const textResult = map<ClientUser, string>(
-      (client) =>
-        `name: ${client.name}, distance: ${distance(executor.position, client.position)}, reward: ${client.reward}`
-    )(filteredClients).join('\n');
+    const convertToMaybe = (filteredClients: ClientUser[]): Maybe<ClientUser[]> =>
+      filteredClients.length ? some(filteredClients) : none;
 
-    const firstLineOfText =
-      filteredClients.length === clients.length
+    const mapClientsToText = (maybeClientsValue: ClientUser[]): string =>
+      map<ClientUser, string>(
+        (client) =>
+          `name: ${client.name}, distance: ${distance(executor.position, client.position)}, reward: ${client.reward}`
+      )(maybeClientsValue).join('\n');
+
+    const getFirstLineOfText = (maybeClientsValue: ClientUser[]): string =>
+      maybeClientsValue.length === clients.length
         ? 'This executor meets all demands of all clients!'
-        : `This executor meets the demands of only ${filteredClients.length} out of ${clients.length} clients`;
+        : `This executor meets the demands of only ${maybeClientsValue.length} out of ${clients.length} clients`;
 
-    return filteredClients.length === 0
-      ? left('This executor cannot meet the demands of any client!')
-      : right(`${firstLineOfText}\n\nAvailable clients sorted by ${sortTextMap[sortBy]}:\n${textResult}`);
+    const getResult = (maybeClients: Maybe<ClientUser[]>): Either<string, string> =>
+      fold<ClientUser[], Either<string, string>>(
+        () => left('This executor cannot meet the demands of any client!'),
+        (maybeClientsValue) =>
+          right(
+            `${getFirstLineOfText(maybeClientsValue)}\n\nAvailable clients sorted by ${
+              sortTextMap[sortBy]
+            }:\n${mapClientsToText(maybeClientsValue)}`
+          )
+      )(maybeClients);
+
+    return pipe(sort(fromCompare(predicate))(clients), filterClients, convertToMaybe, getResult);
   };
 
 export const main = (sortBy: SortBy): Promise<string> =>
