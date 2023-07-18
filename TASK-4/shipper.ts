@@ -46,6 +46,7 @@ class ChicagoSpirintShipper extends Shipper {
         break;
       case ShipmentType.Package:
         this.rate = 0.2;
+        break;
       case ShipmentType.Oversized:
         this.rate = 0;
         break;

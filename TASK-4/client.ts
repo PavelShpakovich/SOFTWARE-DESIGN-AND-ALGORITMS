@@ -1,5 +1,5 @@
 import { ShipmentData } from './types';
-import { Shipment, ShipmentFactory } from './shipment';
+import { Shipment, ShipmentFactory, WithSpecialCodesDecorator } from './shipment';
 import { shipmentData } from './mock';
 
 class Client {
@@ -8,7 +8,8 @@ class Client {
   }
 
   processShipment(shipment: Shipment): void {
-    const result = shipment.ship();
+    const decoratedShipment = new WithSpecialCodesDecorator(shipment);
+    const result = decoratedShipment.ship();
     console.log(result);
   }
 }

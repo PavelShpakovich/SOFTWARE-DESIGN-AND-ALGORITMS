@@ -1,7 +1,7 @@
 import { ShipperFactory } from './shipper';
-import { ShipmentData, ShipmentType, Weight } from './types';
+import { Codes, IShipment, ShipmentData, ShipmentType, Weight } from './types';
 
-export abstract class Shipment {
+export abstract class Shipment implements IShipment {
   private static id: number = 0;
   private shipmentID: number;
   private weight: number;
@@ -9,22 +9,24 @@ export abstract class Shipment {
   private fromZipCode: string;
   private toAddress: string;
   private toZipCode: string;
+  public codes: Codes[] | null;
   abstract type: ShipmentType;
 
-  constructor({ ShipmentID, Weight, FromAddress, FromZipCode, ToAddress, ToZipCode }: ShipmentData) {
+  constructor({ ShipmentID, Weight, FromAddress, FromZipCode, ToAddress, ToZipCode, Codes }: ShipmentData) {
     this.shipmentID = ShipmentID;
     this.weight = Weight;
     this.fromAddress = FromAddress;
     this.fromZipCode = FromZipCode;
     this.toAddress = ToAddress;
     this.toZipCode = ToZipCode;
+    this.codes = Codes;
   }
 
-  getShipmentId() {
+  getShipmentId(): number {
     return this.shipmentID || ++Shipment.id;
   }
 
-  ship() {
+  ship(): string {
     const shipper = new ShipperFactory().produceShipper(this.type, this.fromZipCode);
     const cost = shipper.getCost(this.weight);
 
@@ -66,5 +68,35 @@ export class ShipmentFactory {
     }
 
     return new Oversized(shipmentData);
+  }
+}
+
+abstract class ShipmentDecorator implements IShipment {
+  protected wrappee: Shipment;
+
+  constructor(wrappee: Shipment) {
+    this.wrappee = wrappee;
+  }
+
+  getShipmentId(): number {
+    return this.wrappee.getShipmentId();
+  }
+  abstract ship(): string;
+}
+
+const codeMap = {
+  [Codes.Fragile]: '\n**MARK FRAGILE**',
+  [Codes.DoNotLeave]: '\n**MARK DO NOT LEAVE IF ADDRESS NOT AT HOME**',
+  [Codes.ReturnReceiptRequested]: '\n**MARK RETURN RECEIPT REQUESTED**',
+};
+
+export class WithSpecialCodesDecorator extends ShipmentDecorator {
+  ship(): string {
+    if (this.wrappee.codes) {
+      const marks = this.wrappee.codes.reduce((prev, curr) => prev + codeMap[curr], '');
+      return `${this.wrappee.ship()}${marks}`;
+    }
+
+    return this.wrappee.ship();
   }
 }
