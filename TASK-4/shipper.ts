@@ -1,94 +1,62 @@
 import { ShipmentType } from './types';
 
-abstract class Shipper {
-  abstract rate: number;
-
-  getCost(weight: number): number {
-    return weight * this.rate;
-  }
+export interface ShipperStrategy {
+  getCost(weight: number, type: ShipmentType): number;
 }
 
-class AirEastShipper extends Shipper {
-  rate: number;
-  type: ShipmentType;
-  constructor(type: ShipmentType) {
-    super();
-    this.type = type;
+export class AirEastShipperStrategy implements ShipperStrategy {
+  getCost(weight: number, type: ShipmentType): number {
+    let rate: number;
     switch (type) {
       case ShipmentType.Letter:
-        this.rate = 0.39;
+        rate = 0.39;
         break;
       case ShipmentType.Package:
       case ShipmentType.Oversized:
-        this.rate = 0.25;
+        rate = 0.25;
         break;
     }
-  }
-
-  getCost(weight: number): number {
-    if (this.type === ShipmentType.Oversized) {
-      return super.getCost(weight) + 10;
+    if (type === ShipmentType.Oversized) {
+      return weight * rate + 10;
     }
 
-    return super.getCost(weight);
+    return weight * rate;
   }
 }
 
-class ChicagoSpirintShipper extends Shipper {
-  rate: number;
-  type: ShipmentType;
-  constructor(type: ShipmentType) {
-    super();
-    this.type = type;
+export class ChicagoSpirintShipperStrategy implements ShipperStrategy {
+  getCost(weight: number, type: ShipmentType): number {
+    let rate: number;
     switch (type) {
       case ShipmentType.Letter:
-        this.rate = 0.42;
+        rate = 0.42;
         break;
       case ShipmentType.Package:
-        this.rate = 0.2;
+        rate = 0.2;
         break;
       case ShipmentType.Oversized:
-        this.rate = 0;
+        rate = 0;
         break;
     }
+
+    return weight * rate;
   }
 }
 
-class PacificParcelShipper extends Shipper {
-  rate: number;
-  type: ShipmentType;
-  constructor(type: ShipmentType) {
-    super();
-    this.type = type;
+export class PacificParcelShipperStrategy implements ShipperStrategy {
+  getCost(weight: number, type: ShipmentType): number {
+    let rate: number;
     switch (type) {
       case ShipmentType.Letter:
-        this.rate = 0.51;
+        rate = 0.51;
         break;
       case ShipmentType.Package:
-        this.rate = 0.19;
+        rate = 0.19;
       case ShipmentType.Oversized:
-        this.rate = 0.21;
+        rate = 0.21;
         break;
     }
-  }
-}
 
-export class ShipperFactory {
-  produceShipper(type: ShipmentType, zipCode?: string) {
-    const zipCodeBegins = parseInt(zipCode?.[0] as string);
-
-    if (zipCodeBegins <= 3) {
-      return new AirEastShipper(type);
-    }
-
-    if (zipCodeBegins <= 6) {
-      return new ChicagoSpirintShipper(type);
-    }
-
-    if (zipCodeBegins <= 9) {
-      return new PacificParcelShipper(type);
-    }
-
-    return new AirEastShipper(type);
+    return weight * rate;
   }
 }

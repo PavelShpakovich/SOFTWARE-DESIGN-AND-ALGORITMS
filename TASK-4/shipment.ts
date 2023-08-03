@@ -1,4 +1,5 @@
-import { ShipperFactory } from './shipper';
+import { ShipperContext } from './context';
+import { ShipperStrategy } from './shipper';
 import { Codes, IShipment, ShipmentData, ShipmentType, Weight } from './types';
 
 export abstract class Shipment implements IShipment {
@@ -9,17 +10,21 @@ export abstract class Shipment implements IShipment {
   private fromZipCode: string;
   private toAddress: string;
   private toZipCode: string;
-  public codes: Codes[] | null;
   abstract type: ShipmentType;
 
-  constructor({ ShipmentID, Weight, FromAddress, FromZipCode, ToAddress, ToZipCode, Codes }: ShipmentData) {
+  private context: ShipperContext;
+
+  constructor(
+    { ShipmentID, Weight, FromAddress, FromZipCode, ToAddress, ToZipCode }: ShipmentData,
+    context: ShipperContext
+  ) {
     this.shipmentID = ShipmentID;
     this.weight = Weight;
     this.fromAddress = FromAddress;
     this.fromZipCode = FromZipCode;
     this.toAddress = ToAddress;
     this.toZipCode = ToZipCode;
-    this.codes = Codes;
+    this.context = context;
   }
 
   getShipmentId(): number {
@@ -27,54 +32,30 @@ export abstract class Shipment implements IShipment {
   }
 
   ship(): string {
-    const shipper = new ShipperFactory().produceShipper(this.type, this.fromZipCode);
-    const cost = shipper.getCost(this.weight);
+    const cost = this.context.getCost(this.weight, this.type);
 
     return `Shipment ID: ${this.getShipmentId()}, From: ${this.fromAddress} (${this.fromZipCode}), To: ${
       this.toAddress
-    } (${this.toZipCode}), Cost: $${cost.toFixed(2)}`;
+    } (${this.toZipCode}), Cost: $${cost?.toFixed(2)}`;
   }
 }
 
 export class Letter extends Shipment {
   type: ShipmentType = ShipmentType.Letter;
-  constructor(shipmentData: ShipmentData) {
-    super(shipmentData);
-  }
 }
 
 export class Package extends Shipment {
   type: ShipmentType = ShipmentType.Package;
-  constructor(shipmentData: ShipmentData) {
-    super(shipmentData);
-  }
 }
 
 export class Oversized extends Shipment {
   type: ShipmentType = ShipmentType.Oversized;
-  constructor(shipmentData: ShipmentData) {
-    super(shipmentData);
-  }
-}
-
-export class ShipmentFactory {
-  produceShipment(shipmentData: ShipmentData) {
-    if (shipmentData.Weight <= Weight.Small) {
-      return new Letter(shipmentData);
-    }
-
-    if (shipmentData.Weight <= Weight.Medium) {
-      return new Package(shipmentData);
-    }
-
-    return new Oversized(shipmentData);
-  }
 }
 
 abstract class ShipmentDecorator implements IShipment {
-  protected wrappee: Shipment;
+  protected wrappee: IShipment;
 
-  constructor(wrappee: Shipment) {
+  constructor(wrappee: IShipment) {
     this.wrappee = wrappee;
   }
 
@@ -84,19 +65,24 @@ abstract class ShipmentDecorator implements IShipment {
   abstract ship(): string;
 }
 
-const codeMap = {
-  [Codes.Fragile]: '\n**MARK FRAGILE**',
-  [Codes.DoNotLeave]: '\n**MARK DO NOT LEAVE IF ADDRESS NOT AT HOME**',
-  [Codes.ReturnReceiptRequested]: '\n**MARK RETURN RECEIPT REQUESTED**',
-};
-
-export class WithSpecialCodesDecorator extends ShipmentDecorator {
+class WithFragileCodeDecorator extends ShipmentDecorator {
   ship(): string {
-    if (this.wrappee.codes) {
-      const marks = this.wrappee.codes.reduce((prev, curr) => prev + codeMap[curr], '');
-      return `${this.wrappee.ship()}${marks}`;
-    }
-
-    return this.wrappee.ship();
+    return `${this.wrappee.ship()}\n**MARK FRAGILE**`;
   }
 }
+class WithDoNotLeaveCodeDecorator extends ShipmentDecorator {
+  ship(): string {
+    return `${this.wrappee.ship()}\n**MARK DO NOT LEAVE IF ADDRESS NOT AT HOME**`;
+  }
+}
+class WithReturnReceiptRequestedCodeDecorator extends ShipmentDecorator {
+  ship(): string {
+    return `${this.wrappee.ship()}\n**MARK RETURN RECEIPT REQUESTED**`;
+  }
+}
+
+export const decoratorsMap = {
+  [Codes.Fragile]: WithFragileCodeDecorator,
+  [Codes.DoNotLeave]: WithDoNotLeaveCodeDecorator,
+  [Codes.ReturnReceiptRequested]: WithReturnReceiptRequestedCodeDecorator,
+};
