@@ -1,10 +1,10 @@
 import { ShipmentType } from './types';
 
-export interface ShipperStrategy {
+export interface Shipper {
   getCost(weight: number, type: ShipmentType): number;
 }
 
-export class AirEastShipperStrategy implements ShipperStrategy {
+export class AirEastShipper implements Shipper {
   getCost(weight: number, type: ShipmentType): number {
     let rate: number;
     switch (type) {
@@ -24,7 +24,7 @@ export class AirEastShipperStrategy implements ShipperStrategy {
   }
 }
 
-export class ChicagoSpirintShipperStrategy implements ShipperStrategy {
+export class ChicagoSpirintShipper implements Shipper {
   getCost(weight: number, type: ShipmentType): number {
     let rate: number;
     switch (type) {
@@ -43,7 +43,7 @@ export class ChicagoSpirintShipperStrategy implements ShipperStrategy {
   }
 }
 
-export class PacificParcelShipperStrategy implements ShipperStrategy {
+export class PacificParcelShipper implements Shipper {
   getCost(weight: number, type: ShipmentType): number {
     let rate: number;
     switch (type) {

@@ -1,54 +1,46 @@
 import { IShipment, ShipmentData, Weight } from './types';
-import { decoratorsMap, Letter, Package, Oversized } from './shipment';
-import {
-  AirEastShipperStrategy,
-  ChicagoSpirintShipperStrategy,
-  PacificParcelShipperStrategy,
-  ShipperStrategy,
-} from './shipper';
-import { ShipperContext } from './context';
+import { decoratorsMap, Letter, Package, Oversized, Shipment, ShipmentDecorator } from './shipment';
+import { AirEastShipper, ChicagoSpirintShipper, PacificParcelShipper, Shipper } from './shipper';
 
 export class Client {
-  getStrategy(zipCode: string): ShipperStrategy {
+  getStrategy(zipCode: string): Shipper {
     const zipCodeBegins = parseInt(zipCode?.[0] as string);
 
     if (zipCodeBegins <= 3) {
-      return new AirEastShipperStrategy();
+      return new AirEastShipper();
     }
 
     if (zipCodeBegins <= 6) {
-      return new ChicagoSpirintShipperStrategy();
+      return new ChicagoSpirintShipper();
     }
 
     if (zipCodeBegins <= 9) {
-      return new PacificParcelShipperStrategy();
+      return new PacificParcelShipper();
     }
 
-    return new AirEastShipperStrategy();
+    return new AirEastShipper();
   }
 
   createShipment(shipmentData: ShipmentData): IShipment {
-    let shipment: IShipment;
-    const context = new ShipperContext();
-
-    context.setStrategy(this.getStrategy(shipmentData.FromZipCode));
+    let shipment: Shipment;
 
     if (shipmentData.Weight <= Weight.Small) {
-      shipment = new Letter(shipmentData, context);
+      shipment = new Letter(shipmentData);
+    } else if (shipmentData.Weight <= Weight.Medium) {
+      shipment = new Package(shipmentData);
+    } else {
+      shipment = new Oversized(shipmentData);
     }
 
-    if (shipmentData.Weight <= Weight.Medium) {
-      shipment = new Package(shipmentData, context);
-    }
+    shipment.setShipper(this.getStrategy(shipmentData.FromZipCode));
 
-    shipment = new Oversized(shipmentData, context);
-
+    let decoratedShipment: IShipment = new ShipmentDecorator(shipment);
     shipmentData.Codes?.forEach((code) => {
       const Decorator = decoratorsMap[code];
-      shipment = new Decorator(shipment);
+      decoratedShipment = new Decorator(decoratedShipment);
     });
 
-    return shipment;
+    return decoratedShipment;
   }
 
   processShipment(shipmentData: ShipmentData): void {

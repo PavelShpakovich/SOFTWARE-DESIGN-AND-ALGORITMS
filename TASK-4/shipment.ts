@@ -1,6 +1,5 @@
-import { ShipperContext } from './context';
-import { ShipperStrategy } from './shipper';
-import { Codes, IShipment, ShipmentData, ShipmentType, Weight } from './types';
+import { Shipper } from './shipper';
+import { Codes, IShipment, ShipmentData, ShipmentType } from './types';
 
 export abstract class Shipment implements IShipment {
   private static id: number = 0;
@@ -12,19 +11,19 @@ export abstract class Shipment implements IShipment {
   private toZipCode: string;
   abstract type: ShipmentType;
 
-  private context: ShipperContext;
+  private shipper: Shipper | null = null; // to avoid ts errors
 
-  constructor(
-    { ShipmentID, Weight, FromAddress, FromZipCode, ToAddress, ToZipCode }: ShipmentData,
-    context: ShipperContext
-  ) {
+  constructor({ ShipmentID, Weight, FromAddress, FromZipCode, ToAddress, ToZipCode }: ShipmentData) {
     this.shipmentID = ShipmentID;
     this.weight = Weight;
     this.fromAddress = FromAddress;
     this.fromZipCode = FromZipCode;
     this.toAddress = ToAddress;
     this.toZipCode = ToZipCode;
-    this.context = context;
+  }
+
+  setShipper(s: Shipper): void {
+    this.shipper = s;
   }
 
   getShipmentId(): number {
@@ -32,7 +31,7 @@ export abstract class Shipment implements IShipment {
   }
 
   ship(): string {
-    const cost = this.context.getCost(this.weight, this.type);
+    const cost = this.shipper?.getCost(this.weight, this.type);
 
     return `Shipment ID: ${this.getShipmentId()}, From: ${this.fromAddress} (${this.fromZipCode}), To: ${
       this.toAddress
@@ -52,7 +51,7 @@ export class Oversized extends Shipment {
   type: ShipmentType = ShipmentType.Oversized;
 }
 
-abstract class ShipmentDecorator implements IShipment {
+export class ShipmentDecorator implements IShipment {
   protected wrappee: IShipment;
 
   constructor(wrappee: IShipment) {
@@ -62,7 +61,9 @@ abstract class ShipmentDecorator implements IShipment {
   getShipmentId(): number {
     return this.wrappee.getShipmentId();
   }
-  abstract ship(): string;
+  ship(): string {
+    return this.wrappee.ship();
+  }
 }
 
 class WithFragileCodeDecorator extends ShipmentDecorator {
