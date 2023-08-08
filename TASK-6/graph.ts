@@ -1,17 +1,17 @@
 import { IVertex, IWeightedGraph } from './types';
 
 export class WeightedGraph implements IWeightedGraph<IVertex> {
-  adjacencylist: Record<string, Record<string, number>>;
+  adjacencylist: Map<string, Map<string, number>>;
 
   constructor() {
-    this.adjacencylist = {};
+    this.adjacencylist = new Map<string, Map<string, number>>();
   }
 
   addVertex(key: string): void {
-    this.adjacencylist[key] = {};
+    this.adjacencylist.set(key, new Map());
   }
   addEdge(from: IVertex, to: IVertex, weight: number): void {
-    this.adjacencylist[from.value][to.value] = weight;
-    this.adjacencylist[to.value][from.value] = weight;
+    this.adjacencylist.get(from.value)?.set(to.value, weight);
+    this.adjacencylist.get(to.value)?.set(from.value, weight);
   }
 }

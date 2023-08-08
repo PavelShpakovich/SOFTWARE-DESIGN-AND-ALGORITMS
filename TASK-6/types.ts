@@ -1,5 +1,5 @@
 export interface IWeightedGraph<T> {
-  adjacencylist: Record<string, Record<string, number>>;
+  adjacencylist: Map<string, Map<string, number>>;
   addVertex(key: string): void;
   addEdge(from: T, to: T, weight: number): void;
 }

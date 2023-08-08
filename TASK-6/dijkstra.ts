@@ -37,9 +37,7 @@ export class Dijkstra implements IDijkstra<IVertex> {
     const distances: Record<string, number> = {};
     const previous: Record<string, string | null> = {};
 
-    const vertices = Object.keys(this.graph.adjacencylist);
-
-    vertices.forEach((vertex) => {
+    this.graph.adjacencylist.forEach((_, vertex) => {
       distances[vertex] = vertex === value ? 0 : Infinity;
       previous[vertex] = null;
     });
@@ -49,12 +47,12 @@ export class Dijkstra implements IDijkstra<IVertex> {
     while (currentVertex) {
       const currentVertexDistance = distances[currentVertex];
 
-      const neighbourVertices = this.graph.adjacencylist[currentVertex];
+      const neighbourVertices = this.graph.adjacencylist.get(currentVertex);
 
-      Object.keys(neighbourVertices).forEach((neighbourVertex) => {
+      neighbourVertices?.forEach((initialNeighbourVertexDistance, neighbourVertex) => {
         const currentNeighbourVertexDistance = distances[neighbourVertex];
 
-        const newNeighbourVertexDistance = currentVertexDistance + neighbourVertices[neighbourVertex];
+        const newNeighbourVertexDistance = currentVertexDistance + initialNeighbourVertexDistance;
 
         if (newNeighbourVertexDistance < currentNeighbourVertexDistance) {
           distances[neighbourVertex] = newNeighbourVertexDistance;
