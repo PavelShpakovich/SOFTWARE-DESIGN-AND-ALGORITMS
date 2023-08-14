@@ -1,0 +1,19 @@
+{
+  "name": "dijkstra",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "start": "npx ts-node index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PavelShpakovich/SOFTWARE-DESIGN-AND-ALGORITMS.git"
+  },
+  "author": "Pavel Shpakovich",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PavelShpakovich/SOFTWARE-DESIGN-AND-ALGORITMS/issues"
+  },
+  "homepage": "https://github.com/PavelShpakovich/SOFTWARE-DESIGN-AND-ALGORITMS#readme"
+}
