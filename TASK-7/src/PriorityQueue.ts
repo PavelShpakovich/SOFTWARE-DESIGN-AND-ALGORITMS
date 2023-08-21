@@ -6,21 +6,19 @@ interface PriorityQueueI<T> {
 
 export class PriorityQueue<T> implements PriorityQueueI<T> {
   private values: { value: T; priority: number }[] = [null];
-  private _size: number = 0;
 
-  swap(index1: number, index2: number): void {
+  private swap(index1: number, index2: number): void {
     [this.values[index1], this.values[index2]] = [this.values[index2], this.values[index1]];
   }
 
   size(): number {
-    return this._size;
+    return this.values.length - 1;
   }
 
   enqueue = (value: T, priority: number): void => {
     this.values.push({ value, priority });
-    ++this._size;
 
-    if (this.size() > 2) {
+    if (this.size() >= 2) {
       let currentIndex = this.size();
       let parentIndex = Math.floor(currentIndex / 2);
 
@@ -37,7 +35,6 @@ export class PriorityQueue<T> implements PriorityQueueI<T> {
 
     this.swap(1, this.size());
     const { value } = this.values.pop();
-    --this._size;
 
     if (this.size() > 2) {
       let currentIndex = 1;

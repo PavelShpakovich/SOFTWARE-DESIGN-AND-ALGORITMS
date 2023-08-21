@@ -12,11 +12,10 @@ export class Scheduler implements SchedulerI {
     this.pq.enqueue(task, priority);
   }
 
-  run(): Promise<void> {
+  async run(): Promise<void> {
     while (this.pq.size()) {
       const task = this.pq.dequeue();
       task();
     }
-    return Promise.resolve();
   }
 }
