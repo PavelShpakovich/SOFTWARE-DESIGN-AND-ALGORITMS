@@ -1,4 +1,4 @@
-import { Scheduler } from "../src/Scheduler";
+import { Scheduler } from '../src/Scheduler';
 
 const task = (fn) => Promise.resolve().then(fn);
 
@@ -8,7 +8,7 @@ const cycle = (numberOfCycles: number, fn: (i: number) => void) => {
   }
 };
 
-describe("Scheduler", () => {
+describe('Scheduler', () => {
   const PRIORITY_1 = 1;
   const PRIORITY_2 = 2;
 
@@ -40,7 +40,7 @@ describe("Scheduler", () => {
     scheduler = new Scheduler();
   });
 
-  it("Tasks sorted in priority when pushed in bunch", () => {
+  it('Tasks sorted in priority when pushed in bunch', () => {
     cycle(10, spawnP2);
     cycle(5, spawnP1);
 
@@ -50,26 +50,26 @@ describe("Scheduler", () => {
     return task(() => {
       // execution of tasks was in order of priority
       expect(executedTasks).toEqual([
-        "P1: 0",
-        "P1: 1",
-        "P1: 2",
-        "P1: 3",
-        "P1: 4",
-        "P2: 0",
-        "P2: 1",
-        "P2: 2",
-        "P2: 3",
-        "P2: 4",
-        "P2: 5",
-        "P2: 6",
-        "P2: 7",
-        "P2: 8",
-        "P2: 9",
+        'P1: 0',
+        'P1: 1',
+        'P1: 2',
+        'P1: 3',
+        'P1: 4',
+        'P2: 0',
+        'P2: 1',
+        'P2: 2',
+        'P2: 3',
+        'P2: 4',
+        'P2: 5',
+        'P2: 6',
+        'P2: 7',
+        'P2: 8',
+        'P2: 9',
       ]);
     });
   });
 
-  it("Tasks sorted in priority when pushed randomly", () => {
+  it('Tasks sorted in priority when pushed randomly', () => {
     spawnP1(); // P1: 0
 
     spawnP2(); // P2: 0
@@ -89,17 +89,17 @@ describe("Scheduler", () => {
 
     return scheduler.run().then(() => {
       expect(executedTasks).toEqual([
-        "P1: 0",
-        "P1: 1",
-        "P1: 2",
-        "P1: 3",
-        "P1: 4",
-        "P2: 0",
-        "P2: 1",
-        "P2: 2",
-        "P2: 3",
-        "P2: 4",
-        "P2: 5",
+        'P1: 0',
+        'P1: 1',
+        'P1: 2',
+        'P1: 3',
+        'P1: 4',
+        'P2: 0',
+        'P2: 1',
+        'P2: 2',
+        'P2: 3',
+        'P2: 4',
+        'P2: 5',
       ]);
     });
   });
